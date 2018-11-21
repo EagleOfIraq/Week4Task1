@@ -1,0 +1,53 @@
+Arguments: 
+  /usr/local/bin/node /usr/local/bin/yarn add assets
+
+PATH: 
+  /usr/local/lib/node_modules/npm/node_modules/npm-lifecycle/node-gyp-bin:/Users/ellyish/Desktop/fikraspace-react-todo-final/node_modules/.bin:/Users/ellyish/.cargo/bin:/Library/Frameworks/Python.framework/Versions/3.6/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/go/bin:/usr/local/share/dotnet:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/ellyish/.cargo/bin:/Library/Frameworks/Python.framework/Versions/3.6/bin:/Users/ellyish/Library/Android/sdk/tools:/Users/ellyish/Library/Android/sdk/platform-tools:/Users/ellyish/Library/Android/sdk/tools:/Users/ellyish/Library/Android/sdk/platform-tools
+
+Yarn version: 
+  1.10.1
+
+Node version: 
+  8.12.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  SyntaxError: /Users/ellyish/Library/Caches/Yarn/v2/npm-isomorphic-fetch-2.2.1-611ae1acf14f5e81f729507472819fe9733558a9/.yarn-metadata.json: Unexpected end of JSON input
+      at JSON.parse (<anonymous>)
+      at /usr/local/lib/node_modules/yarn/lib/cli.js:1136:59
+      at Generator.next (<anonymous>)
+      at step (/usr/local/lib/node_modules/yarn/lib/cli.js:98:30)
+      at /usr/local/lib/node_modules/yarn/lib/cli.js:109:13
+      at <anonymous>
+
+npm manifest: 
+  {
+    "name": "fikranews",
+    "version": "0.0.1",
+    "description": "a hackernews like site",
+    "main": "appX.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "start": "parcel index.html"
+    },
+    "author": "FikraSpace",
+    "license": "ISC",
+    "dependencies": {
+      "babel-core": "^6.26.3",
+      "react": "^16.6.3",
+      "react-dom": "^16.6.3",
+      "styled-components": "^4.1.1"
+    },
+    "devDependencies": {
+      "babel-preset-env": "^1.7.0",
+      "babel-preset-react": "^6.24.1"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

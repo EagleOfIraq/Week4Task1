@@ -1,0 +1,22 @@
+{
+  "name": "fikranews",
+  "version": "0.0.1",
+  "description": "a hackernews like site",
+  "main": "appX.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel index.html"
+  },
+  "author": "FikraSpace",
+  "license": "ISC",
+  "dependencies": {
+    "babel-core": "^6.26.3",
+    "react": "^16.6.3",
+    "react-dom": "^16.6.3",
+    "styled-components": "^4.1.1"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1"
+  }
+}
