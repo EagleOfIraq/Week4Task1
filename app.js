@@ -1,8 +1,13 @@
-import React, {Component} from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom'
 import styled from 'styled-components'
-import firebase from "firebase";
 
+import firebase from 'firebase';
+
+import ReactModal from 'react-modal'
+
+
+// Initialize Firebase
 var config = {
     apiKey: "AIzaSyBlJcSGcho_Jj27iPYrFH0pJcoaSugMYeM",
     authDomain: "fikrajob.firebaseapp.com",
@@ -13,295 +18,210 @@ var config = {
 };
 
 firebase.initializeApp(config);
-const firestore = firebase.firestore();
-const settings = {timestampsInSnapshots: true};
-firestore.settings(settings);
 
 
-let SearchBox = styled.input`
-  border-radius: 20px;
-  background-color: #000;
-  color: #fff;
-  font-size: 1.2rem;
-  border: 0px;
+let Button = styled.button`
+  background-color: #466AB3;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  min-width: 100px;
+`
+
+let TextInput = styled.input`
+  display: block;
+  border: 2px solid #000;
+  width: 100%;
+  margin: 10px 0px;
   height: 40px;
-  outline: none;
-  padding: 0 10px;
-`;
+  font-size: 1.4rem;
+`
+
+
+let Context = React.createContext()
+
 
 let Navigation = styled.header`
-  display: flex;
-  padding: 0px 10%;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0px 2px 25px rgba(0,0,0,0.16);
-  height: 100px;
-`;
-
-let Configs = styled.div`
-  display: flex;
-  padding: 0px 10%;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0px 2px 25px rgba(0,0,0,0.16);
-  height: 100px;
-`;
-
-let PageSizeBox = styled.select`
-  margin: 3px;
-  background-color: #FFF;
-  color: #000;
-  flex-grow:.5;
-  text-align: center
-  padding: 0px,5px,0px.5px;
-  font-size: 1.2rem;
-  border: 0px;
-  height: 40px;
-`;
-
-let SpaceDiv = styled.div`
-  flex-grow:2;
-`;
-
-let SortTypeBox = styled.select`
-  margin: 3px;
-  border-radius: 5px;
-  background-color: #FFF;
-  flex-grow:.5;
-  color: #000;
-  padding: 0px,5px,0px.5px;
-  font-size: 1.2rem;
-  border: 0px;
-  height: 40px;
-`;
-
-let NewsContainer = styled.main`
-  background-color: red;
-  padding: 20px 10%;
-`;
-
-let NewsItem = styled.div`
   background-color: #fff;
-  border: 2px solid #E5E9F2;
-  min-height: 150px;
-  margin: 20px 0px;
-  border-radius: 4px;
+  height: 120px;
   display: flex;
-  padding: 10px;
-`;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 10%;
+`
 
-let NewsText = styled.div`
-  padding-left: 14px;
-  position: relative;
-`;
 
-let NewsVote = styled.div`
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-`;
-
-let DateTime = styled.time`
-  position: absolute;
-  bottom: 0px;
-  color: #399DF2;
-  font-family: sans-serif;
-`;
-
-class News extends Component {
+class Header extends React.Component {
 
     constructor() {
         super();
-        this.state = {
-            news: [],
-            pageSize: 5,
-            sortType: 0,
-            searchValue: '',
-            votesCollection: firebase.firestore().collection('votes123'),
-            readersCollection: firebase.firestore().collection('readers123')
-        };
-        this.state.readersCollection.add({
-            reader: 'Falah'
-        });
-        this.getNews()
-
-    }
-
-    getNews() {
-        fetch(`https://newsapi.org/v2/everything?q=${this.state.searchValue || 'iraq'}&apiKey=978d6c3818ff431b8c210ae86550fb1f`)
-            .then((response) => {
-                return response.json()
-            })
-            .then(data => {
-                return data.articles;
-            })
-            .then((articles) => {
-                articles.forEach(item => {
-                    item.votes = 0;
-                    this.state.votesCollection
-                        .onSnapshot((snapshot) => {
-                            snapshot.forEach((doc) => {
-                                if (item.title.replace('/', '\\') == doc.id) {
-                                    item.votes = doc.data().count;
-                                    this.setState({
-                                        news: articles
-                                    })
-                                }
-                            })
-                        });
-                });
-                if (this.state.sortType == 0) {
-                    this.setState({
-                        news: articles.slice(0,
-                            this.state.pageSize).sort((o1, o2) =>
-                            o1.votes - o2.votes)
-                    })
-                } else if (this.state.sortType == 1) {
-                    this.setState({
-                        news: articles.slice(0,
-                            this.state.pageSize).sort((o1, o2) =>
-                            News.parseDate(o1.publishedAt)
-                            - News.parseDate(o2.publishedAt)
-                        )
-                    })
-                }
-                else if (this.state.sortType == 2) {
-                    this.setState({
-                        news: articles.slice(0, this.state.pageSize).sort((o1, o2) => {
-                            if (o1.title < o2.title) {
-                                return -1;
-                            }
-                            if (o1.title > o2.title) {
-                                return 1;
-                            }
-                            return 0;
-                        })
-                    })
-                }
-                else {
-                    this.setState({
-                        news: data.articles.slice(0, this.state.pageSize)
-                    })
-                }
-
-
-            })
-    }
-
-    static parseDate(dateTime) {
-        let date = dateTime.split('T')[0];
-        let time = dateTime.split('T')[1].replace('Z', '');
-        let dateArr = date.split('-');
-        let timeArr = time.split(':');
-        let ts = new Date(dateArr[0], dateArr[1], dateArr[2], timeArr[0], timeArr[1], timeArr[2], 0).getTime();
-        console.log(ts);
-        return ts;
-    }
-
-    onInputChange(event) {
-        this.setState({
-            searchValue: event.target.value
-        })
-    }
-
-    onKeyUp(event) {
-        if (event.key == 'Enter') {
-            this.getNews();
-            this.setState({
-                searchValue: ''
-            })
-        }
+        this.state = {}
     }
 
     render() {
         return (
-            <React.Fragment>
-                <Navigation>
-                    <img width="150px;" src={require('./assets/logo.svg')}/>
-                    <SearchBox
-                        onChange={this.onInputChange.bind(this)}
-                        onKeyUp={this.onKeyUp.bind(this)}
-                        value={this.state.searchValue} placeholder="search term"/>
-                </Navigation>
-                <Configs>
-                    <h3>Page Size </h3>
-                    <PageSizeBox placeholder="page size" onChange={event => {
-                        this.setState({
-                            pageSize: event.target.value
-                        });
-                        this.getNews();
+            <Context.Consumer>
+                {
+                    (ctx) => {
+                        return (
+                            <Navigation>
+                                <ReactModal isOpen={ctx.state.modalState}>
+                                    <h1>
+                                        FikraCamps
+                                    </h1>
+                                    <TextInput value={ctx.state.title}
+                                               onChange={(event) => {
+                                                   ctx.actions.onChangeTitle(event.target.value)
+                                               }}
+                                               placeholder="Title" type="text"/>
 
-                    }}>
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={15}>15</option>
-                        <option value={20}>20</option>
-                    </PageSizeBox>
-                    <SpaceDiv/>
-                    <h3>Sort Type </h3>
-                    <SortTypeBox placeholder="sort type" onChange={event => {
-                        this.setState({
-                            sortType: event.target.value
-                        });
-                        this.getNews();
-                    }}>
-                        <option value={0}>Default</option>
-                        <option value={1}>Date</option>
-                        <option value={2}>Title</option>
-                    </SortTypeBox>
-                </Configs>
-                <NewsContainer>
-                    {
-                        this.state.news.map((item, i) => {
-                            return (
-                                <NewsItem key={i}>
-                                    <img width="124px;" height="124px" src={item.urlToImage}/>
-                                    <NewsText>
-                                        <h1>{item.title}</h1>
-                                        <p>{item.description}</p>
-                                        <DateTime>{item.publishedAt}</DateTime>
-                                    </NewsText>
-                                    <NewsVote>
-                                        <img width="13" height="13"
-                                             src={require('./assets/upvote.svg')}
-                                             onClick={() => {
-                                                 item.votes += 1;
-                                                 this.state.votesCollection
-                                                     .doc(item.title.replace('/', '\\'))
-                                                     .set({count: item.votes});
-                                                 this.setState({
-                                                     news: this.state.news
-                                                 })
-                                             }}/>
-                                        <div id="counter">{item.votes}</div>
-                                        <img width="13" height="13"
-                                             src={require('./assets/downvote.svg')} onClick={() => {
-                                            item.votes -= 1;
-                                            this.state.votesCollection
-                                                .doc(item.title.replace('/', '\\'))
-                                                .set({count: item.votes});
-                                            this.setState({
-                                                news: this.state.news
-                                            })
-                                        }}/>
-                                    </NewsVote>
-                                </NewsItem>
-                            )
-                        })
+                                    <TextInput
+                                        onChange={(event) => {
+                                            ctx.actions.onChangeCompanyName(event.target.value)
+                                        }}
+                                        value={ctx.state.company_name}
+                                        placeholder="Company Name"
+                                        type="text"/>
+
+                                    <Button onClick={() => {
+
+                                        firebase.firestore().collection('jobs').add({
+                                            company_name: ctx.state.company_name,
+                                            title: ctx.state.title,
+                                            date: Date.now()
+                                        })
+
+                                        ctx.actions.toggle()
+                                    }}>Save</Button>
+
+                                </ReactModal>
+                                <img width="120px;" src={require('./assets/logo.svg')}/>
+                                <Button onClick={() => {
+                                    ctx.actions.toggle()
+                                }}>Post A Job</Button>
+                            </Navigation>
+                        )
                     }
-                </NewsContainer>
-            </React.Fragment>
+                }
+            </Context.Consumer>
         )
     }
 }
 
-function App() {
-    return <div>
-        <News/>
-    </div>
+
+let Container = styled.main`
+  background-color: red;
+  min-height: 500px;
+  padding: 10px 10%;
+  
+`;
+
+let Job = styled.div`
+  height: 80px;
+  border: 1px solid;
+  background: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  font-size: 2rem;
+  margin-top: 20px;
+`;
+
+class JobsList extends React.Component {
+    constructor() {
+        super()
+    }
+
+    render() {
+        return (
+            <Context.Consumer>
+                {(ctx) => {
+                    return <Container>
+                        {
+                            ctx.state.jobs.map((item, i) => {
+                                return <Job key={i}>{item.title}{i}</Job>
+                            })
+                        }
+                    </Container>
+                }}
+            </Context.Consumer>
+        )
+    }
 }
 
-ReactDOM.render(
-    <App/>
-    , document.getElementById('root'));
+
+class App extends React.Component {
+
+    constructor() {
+        super();
+        this.state = {
+            jobs: [{}],
+            modalState: false,
+            company_name: '',
+            title: ''
+        };
+
+        firebase.firestore().collection('jobs')
+            .orderBy('date', 'asc')
+            .onSnapshot((snapshot) => {
+                let jobs = [];
+
+                snapshot.forEach((doc) => {
+                    // firebase.firestore().collection("jobs")
+                    //     .doc(doc.id).delete().then(function() {
+                    //     console.log("Document successfully deleted!");
+                    // }).catch(function(error) {
+                    //     console.error("Error removing document: ", error);
+                    // });
+                    jobs.push(doc.data());
+                    this.setState({
+                        jobs: jobs
+                    })
+                })
+            })
+
+    }
+
+    render() {
+        return (
+            <Context.Provider value={{
+                state: this.state,
+                actions: {
+                    addJob: () => {
+
+                        firebase.firestore().collection('jobs').add({
+                            title: 'JS Developer',
+                            company_name: 'Twitter',
+                            date: Date.now()
+                        })
+
+                    },
+                    toggle: () => {
+                        this.setState({
+                            modalState: !this.state.modalState
+                        })
+                    },
+                    onChangeTitle: (value) => {
+                        this.setState({
+                            title: value
+                        })
+                    },
+                    onChangeCompanyName: (value) => {
+                        this.setState({
+                            company_name: value
+                        })
+                    }
+                }
+            }}>
+                <Header/>
+                <JobsList/>
+            </Context.Provider>
+        )
+    }
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
