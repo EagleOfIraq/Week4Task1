@@ -1,6 +1,21 @@
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 import styled from 'styled-components'
+import firebase from "firebase";
+
+var config = {
+    apiKey: "AIzaSyBlJcSGcho_Jj27iPYrFH0pJcoaSugMYeM",
+    authDomain: "fikrajob.firebaseapp.com",
+    databaseURL: "https://fikrajob.firebaseio.com",
+    projectId: "fikrajob",
+    storageBucket: "fikrajob.appspot.com",
+    messagingSenderId: "259365531926"
+};
+
+firebase.initializeApp(config);
+const firestore = firebase.firestore();
+const settings = {timestampsInSnapshots: true};
+firestore.settings(settings);
 
 
 let SearchBox = styled.input`
@@ -98,13 +113,17 @@ class News extends Component {
 
     constructor() {
         super();
-
         this.state = {
             news: [],
             pageSize: 5,
             sortType: 0,
-            searchValue: ''
+            searchValue: '',
+            votesCollection: firebase.firestore().collection('votes123'),
+            readersCollection: firebase.firestore().collection('readers123')
         };
+        this.state.readersCollection.add({
+            reader: 'Falah'
+        });
         this.getNews()
 
     }
@@ -114,23 +133,42 @@ class News extends Component {
             .then((response) => {
                 return response.json()
             })
-            .then((data) => {
-                data.articles.forEach(item => {
-                    item.votes = localStorage.getItem(item.title) || 0;
+            .then(data => {
+                return data.articles;
+            })
+            .then((articles) => {
+                articles.forEach(item => {
+                    item.votes = 0;
+                    this.state.votesCollection
+                        .onSnapshot((snapshot) => {
+                            snapshot.forEach((doc) => {
+                                if (item.title.replace('/', '\\') == doc.id) {
+                                    item.votes = doc.data().count;
+                                    this.setState({
+                                        news: articles
+                                    })
+                                }
+                            })
+                        });
                 });
                 if (this.state.sortType == 0) {
                     this.setState({
-                        news: data.articles.slice(0, this.state.pageSize).sort((o1, o2) => o1.votes - o2.votes)
+                        news: articles.slice(0,
+                            this.state.pageSize).sort((o1, o2) =>
+                            o1.votes - o2.votes)
                     })
                 } else if (this.state.sortType == 1) {
                     this.setState({
-                        news: data.articles.slice(0, this.state.pageSize).sort((o1, o2) =>
-                            this.parseDate(o1.publishedAt) - this.parseDate(o2.publishedAt))
+                        news: articles.slice(0,
+                            this.state.pageSize).sort((o1, o2) =>
+                            News.parseDate(o1.publishedAt)
+                            - News.parseDate(o2.publishedAt)
+                        )
                     })
                 }
                 else if (this.state.sortType == 2) {
                     this.setState({
-                        news: data.articles.slice(0, this.state.pageSize).sort((o1, o2) => {
+                        news: articles.slice(0, this.state.pageSize).sort((o1, o2) => {
                             if (o1.title < o2.title) {
                                 return -1;
                             }
@@ -151,7 +189,7 @@ class News extends Component {
             })
     }
 
-    parseDate(dateTime) {
+    static parseDate(dateTime) {
         let date = dateTime.split('T')[0];
         let time = dateTime.split('T')[1].replace('Z', '');
         let dateArr = date.split('-');
@@ -189,7 +227,6 @@ class News extends Component {
                 <Configs>
                     <h3>Page Size </h3>
                     <PageSizeBox placeholder="page size" onChange={event => {
-                        console.log(event.target.value);
                         this.setState({
                             pageSize: event.target.value
                         });
@@ -230,7 +267,9 @@ class News extends Component {
                                              src={require('./assets/upvote.svg')}
                                              onClick={() => {
                                                  item.votes += 1;
-                                                 localStorage.setItem(item.title, item.votes);
+                                                 this.state.votesCollection
+                                                     .doc(item.title.replace('/', '\\'))
+                                                     .set({count: item.votes});
                                                  this.setState({
                                                      news: this.state.news
                                                  })
@@ -239,7 +278,9 @@ class News extends Component {
                                         <img width="13" height="13"
                                              src={require('./assets/downvote.svg')} onClick={() => {
                                             item.votes -= 1;
-                                            localStorage.setItem(item.title, item.votes);
+                                            this.state.votesCollection
+                                                .doc(item.title.replace('/', '\\'))
+                                                .set({count: item.votes});
                                             this.setState({
                                                 news: this.state.news
                                             })
@@ -263,4 +304,4 @@ function App() {
 
 ReactDOM.render(
     <App/>
-    , document.getElementById('root'))
+    , document.getElementById('root'));

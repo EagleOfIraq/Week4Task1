@@ -5,15 +5,18 @@
   "main": "appX.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel index.html"
+    "start": "parcel  index.html"
   },
   "author": "FikraSpace",
   "license": "ISC",
   "dependencies": {
     "babel-core": "^6.26.3",
+    "firebase": "^5.5.9",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
-    "styled-components": "^4.1.1"
+    "react-modal": "^3.6.1",
+    "styled-components": "^4.1.1",
+    "surge": "^0.20.1"
   },
   "devDependencies": {
     "babel-preset-env": "^1.7.0",
